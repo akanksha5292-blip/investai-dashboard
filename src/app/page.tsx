@@ -126,9 +126,14 @@ export default function DashboardPage() {
       </section>
 
       {data?.lastUpdated && (
-        <p className="text-xs text-muted-foreground text-center">
-          Last updated: {new Date(data.lastUpdated).toLocaleString("en-IN")}
-        </p>
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
+            Last updated: {new Date(data.lastUpdated).toLocaleString("en-IN")}
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Data refreshes daily at 4:00 AM IST · Click Refresh for latest
+          </p>
+        </div>
       )}
     </div>
   );
