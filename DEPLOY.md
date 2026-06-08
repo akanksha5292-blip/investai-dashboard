@@ -74,6 +74,28 @@ Follow the prompts. Run `vercel --prod` for production.
 
 ---
 
+## Daily Data Refresh
+
+InvestAI automatically refreshes all market, news, and opportunity data **every day at 4:00 AM IST** (10:30 PM UTC).
+
+This is configured in `vercel.json`:
+
+```json
+"crons": [{ "path": "/api/cron/refresh", "schedule": "30 22 * * *" }]
+```
+
+The cron job:
+- Fetches fresh market data from Yahoo Finance
+- Pulls latest news from Google News RSS
+- Regenerates AI investment opportunities
+- Caches results for 24 hours
+
+Users also get fresh data whenever they click **Refresh** on the dashboard.
+
+> **Note:** Vercel Cron requires a **Pro plan** ($20/mo). On the free Hobby plan, data still refreshes on every page visit and manual refresh.
+
+---
+
 ## What works on the live site
 
 | Feature | Web deployment |
