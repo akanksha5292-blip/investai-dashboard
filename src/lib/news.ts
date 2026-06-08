@@ -2,6 +2,8 @@ import Parser from "rss-parser";
 import type { NewsArticle } from "@/types";
 import { MOCK_NEWS } from "./mock-data";
 import { analyzeNewsArticle } from "./ai";
+import { analyzeNewsFree } from "./news-analyzer";
+import { fetchYahooFinanceNews } from "./yahoo-news";
 import { generateId } from "./utils";
 import { getCached, setCache } from "./db";
 
@@ -10,7 +12,6 @@ const parser = new Parser();
 const RSS_FEEDS = [
   "https://news.google.com/rss/search?q=india+stock+market+finance&hl=en-IN&gl=IN&ceid=IN:en",
   "https://news.google.com/rss/search?q=india+economy+policy&hl=en-IN&gl=IN&ceid=IN:en",
-  "https://news.google.com/rss/search?q=nifty+sensex+investment&hl=en-IN&gl=IN&ceid=IN:en",
 ];
 
 async function fetchRssFeed(url: string): Promise<NewsArticle[]> {
@@ -30,6 +31,15 @@ async function fetchRssFeed(url: string): Promise<NewsArticle[]> {
   }
 }
 
+async function analyzeArticle(title: string, summary: string) {
+  // Try OpenAI only if key is set; otherwise use free rule-based analysis
+  const aiResult = await analyzeNewsArticle(title, summary);
+  if (aiResult && process.env.OPENAI_API_KEY && process.env.USE_MOCK_DATA !== "true") {
+    return aiResult;
+  }
+  return analyzeNewsFree(title, summary);
+}
+
 export async function fetchNews(): Promise<{
   articles: NewsArticle[];
   source: "live" | "mock";
@@ -42,24 +52,28 @@ export async function fetchNews(): Promise<{
   }
 
   try {
-    const feedResults = await Promise.all(RSS_FEEDS.map(fetchRssFeed));
-    const allArticles = feedResults.flat();
+    const [yahooNews, ...rssResults] = await Promise.all([
+      fetchYahooFinanceNews(),
+      ...RSS_FEEDS.map(fetchRssFeed),
+    ]);
+
+    const allArticles = [yahooNews, ...rssResults].flat();
 
     const uniqueArticles = Array.from(
       new Map(allArticles.map((a) => [a.title, a])).values()
-    ).slice(0, 10);
+    ).slice(0, 12);
 
     if (uniqueArticles.length === 0) {
       return { articles: MOCK_NEWS, source: "mock" };
     }
 
     const analyzed = await Promise.all(
-      uniqueArticles.slice(0, 6).map(async (article) => {
-        const analysis = await analyzeNewsArticle(
+      uniqueArticles.slice(0, 8).map(async (article) => {
+        const analysis = await analyzeArticle(
           article.title,
           article.summary ?? article.title
         );
-        return { ...article, analysis: analysis ?? undefined };
+        return { ...article, analysis };
       })
     );
 
