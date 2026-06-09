@@ -160,10 +160,15 @@ export interface FinancialTerm {
   example: string;
 }
 
+import type { AnalyticsData } from "@/types/analytics";
+
 export interface DashboardData {
   marketOverview: MarketIndex[];
   topOpportunities: Opportunity[];
   newsArticles: NewsArticle[];
+  analytics: AnalyticsData;
   lastUpdated: string;
   dataSource: "live" | "mock";
 }
+
+export type { AnalyticsData, RankedOpportunity } from "./analytics";

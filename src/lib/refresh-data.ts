@@ -2,6 +2,7 @@ import { getMarketOverview } from "./market";
 import { fetchNews } from "./news";
 import { generateOpportunitiesFromNews } from "./ai";
 import { MOCK_OPPORTUNITIES } from "./mock-data";
+import { generateAnalytics } from "./analytics/engine";
 import { clearCache, setCache } from "./cache";
 
 export async function refreshAllData() {
@@ -20,21 +21,24 @@ export async function refreshAllData() {
   const opportunities =
     (await generateOpportunitiesFromNews(newsForOpps)) ?? MOCK_OPPORTUNITIES;
 
+  const analytics = await generateAnalytics(news.articles, opportunities);
+
   const dataSource =
     market.source === "mock" && news.source === "mock" ? "mock" : "live";
 
   const result = {
     marketOverview: market.data,
-    topOpportunities: opportunities.slice(0, 6),
+    topOpportunities: opportunities.slice(0, 10),
     newsArticles: news.articles,
+    analytics,
     lastUpdated: new Date().toISOString(),
     dataSource,
   };
 
-  // Cache until next daily refresh (24 hours)
   setCache("dashboard_full", result, 24 * 60);
   setCache("market_overview", market.data, 24 * 60);
   setCache("news_articles", news.articles, 24 * 60);
+  setCache("analytics", analytics, 24 * 60);
 
   return {
     success: true,

@@ -1,5 +1,4 @@
 import type {
-  DashboardData,
   FinancialTerm,
   MarketIndex,
   NewsArticle,
@@ -446,12 +445,12 @@ export const FINANCIAL_TERMS: FinancialTerm[] = [
   },
 ];
 
-export function getMockDashboardData(): DashboardData {
+export function getMockDashboardBase() {
   return {
     marketOverview: MOCK_MARKET_DATA,
     topOpportunities: MOCK_OPPORTUNITIES,
     newsArticles: MOCK_NEWS,
     lastUpdated: new Date().toISOString(),
-    dataSource: "mock",
+    dataSource: "mock" as const,
   };
 }

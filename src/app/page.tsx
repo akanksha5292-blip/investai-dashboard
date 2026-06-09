@@ -2,13 +2,22 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { MarketOverview } from "@/components/dashboard/market-overview";
-import { OpportunityCard } from "@/components/dashboard/opportunity-card";
 import { NewsCard } from "@/components/dashboard/news-card";
+import { DailyMemoCard } from "@/components/dashboard/analytics/daily-memo";
+import { MarketHeatmap } from "@/components/dashboard/analytics/market-heatmap";
+import { SectorStrengthTable } from "@/components/dashboard/analytics/sector-strength";
+import { SectorRotation } from "@/components/dashboard/analytics/sector-rotation";
+import { RelativePerformanceTable } from "@/components/dashboard/analytics/relative-performance";
+import { SmartMoneyTracker } from "@/components/dashboard/analytics/smart-money";
+import { ThemePerformanceGrid } from "@/components/dashboard/analytics/theme-performance";
+import { OpportunityFunnel } from "@/components/dashboard/analytics/opportunity-funnel";
+import { RiskRewardMatrix } from "@/components/dashboard/analytics/risk-reward-matrix";
+import { MarketBreadthCard } from "@/components/dashboard/analytics/market-breadth";
+import { TopOpportunitiesSection } from "@/components/dashboard/analytics/top-opportunities";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { DashboardData, Opportunity } from "@/types";
-import { addToWatchlist } from "@/lib/watchlist-client";
+import type { DashboardData } from "@/types";
 import { RefreshCw, Sparkles } from "lucide-react";
 
 export default function DashboardPage() {
@@ -40,18 +49,7 @@ export default function DashboardPage() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const handleAddWatchlist = (opp: Opportunity) => {
-    addToWatchlist({
-      symbol: opp.symbol,
-      name: opp.name,
-      type: opp.type,
-      theme: opp.theme,
-      riskScore: opp.riskScore,
-      confidenceScore: opp.confidenceScore,
-      aiThesis: opp.investmentThesis,
-      themeExposure: opp.beneficiarySectors,
-    });
-  };
+  const analytics = data?.analytics;
 
   return (
     <div className="space-y-8 pt-12 lg:pt-0">
@@ -62,7 +60,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight">Investment Intelligence</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            AI-powered research to discover opportunities before they become mainstream
+            Ranked by risk-adjusted return — find the best opportunities, not the most speculative
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -83,34 +81,51 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-4">Market Overview</h2>
-        <MarketOverview
-          data={data?.marketOverview ?? []}
-          loading={loading}
-        />
-      </section>
+      {loading ? (
+        <Skeleton className="h-64 rounded-xl" />
+      ) : analytics ? (
+        <DailyMemoCard memo={analytics.dailyMemo} />
+      ) : null}
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Top Opportunities Today</h2>
-        {loading ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {data?.topOpportunities.map((opp) => (
-              <OpportunityCard
-                key={opp.id}
-                opportunity={opp}
-                onAddWatchlist={handleAddWatchlist}
-              />
-            ))}
-          </div>
-        )}
+        <h2 className="text-lg font-semibold mb-4">Market Overview</h2>
+        <MarketOverview data={data?.marketOverview ?? []} loading={loading} />
       </section>
+
+      {analytics && (
+        <>
+          <MarketHeatmap data={analytics.heatmap} />
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <SectorStrengthTable
+              data={analytics.sectorStrength}
+              strongest={analytics.strongestSector}
+              weakest={analytics.weakestSector}
+            />
+            <SectorRotation data={analytics.sectorRotation} />
+          </div>
+
+          <RelativePerformanceTable data={analytics.relativePerformance} />
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <SmartMoneyTracker data={analytics.smartMoney} />
+            <MarketBreadthCard data={analytics.marketBreadth} />
+          </div>
+
+          <ThemePerformanceGrid data={analytics.themePerformance} />
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <OpportunityFunnel stages={analytics.opportunityFunnel} />
+            <RiskRewardMatrix data={analytics.riskRewardMatrix} />
+          </div>
+
+          <TopOpportunitiesSection
+            stocks={analytics.topStocks}
+            funds={analytics.topFunds}
+            themes={analytics.topThemes}
+          />
+        </>
+      )}
 
       <section>
         <h2 className="text-lg font-semibold mb-4">Latest News Intelligence</h2>
