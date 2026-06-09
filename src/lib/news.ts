@@ -5,7 +5,7 @@ import { analyzeNewsArticle } from "./ai";
 import { analyzeNewsFree } from "./news-analyzer";
 import { fetchYahooFinanceNews } from "./yahoo-news";
 import { generateId } from "./utils";
-import { getCached, setCache } from "./db";
+import { getCached, setCache, clearCacheKey } from "./cache";
 
 const parser = new Parser();
 
@@ -40,12 +40,17 @@ async function analyzeArticle(title: string, summary: string) {
   return analyzeNewsFree(title, summary);
 }
 
-export async function fetchNews(): Promise<{
+export async function fetchNews(forceRefresh = false): Promise<{
   articles: NewsArticle[];
   source: "live" | "mock";
 }> {
+  if (forceRefresh) {
+    clearCacheKey("news_articles");
+    clearCacheKey("dashboard_full");
+  }
+
   const cached = getCached<NewsArticle[]>("news_articles");
-  if (cached) return { articles: cached, source: "live" };
+  if (cached && !forceRefresh) return { articles: cached, source: "live" };
 
   if (process.env.USE_MOCK_DATA === "true") {
     return { articles: MOCK_NEWS, source: "mock" };

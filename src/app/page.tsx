@@ -21,7 +21,11 @@ export default function DashboardPage() {
     else setLoading(true);
 
     try {
-      const res = await fetch("/api/dashboard", { cache: "no-store" });
+      const url = isRefresh
+        ? `/api/dashboard?refresh=true&t=${Date.now()}`
+        : `/api/dashboard?t=${Date.now()}`;
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setData(json);
     } catch (error) {
@@ -74,7 +78,7 @@ export default function DashboardPage() {
             disabled={refreshing}
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
+            {refreshing ? "Refreshing..." : "Refresh"}
           </Button>
         </div>
       </div>

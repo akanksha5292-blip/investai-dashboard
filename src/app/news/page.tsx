@@ -19,7 +19,10 @@ export default function NewsPage() {
     else setLoading(true);
 
     try {
-      const res = await fetch("/api/news", { cache: "no-store" });
+      const url = isRefresh
+        ? `/api/news?refresh=true&t=${Date.now()}`
+        : `/api/news?t=${Date.now()}`;
+      const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
       setArticles(data.articles);
       setSource(data.source);
