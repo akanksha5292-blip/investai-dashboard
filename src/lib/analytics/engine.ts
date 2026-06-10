@@ -1,5 +1,6 @@
 import type { AnalyticsData, RankedOpportunity } from "@/types/analytics";
 import type { NewsArticle, Opportunity } from "@/types";
+import { getDailyStockPicks, getDailyFundPicks } from "@/lib/diversified-opportunities";
 import { NIFTY_50, SECTORS, THEMES } from "./nifty50";
 
 function seededRandom(seed: number) {
@@ -85,71 +86,6 @@ function opportunityToRanked(opp: Opportunity, type: "stock" | "mutual_fund" | "
   };
 }
 
-const MOCK_STOCKS: RankedOpportunity[] = [
-  "Polycab India", "KEI Industries", "Havells", "CG Power", "Siemens India",
-  "BEL", "HAL", "NTPC", "L&T", "Power Grid",
-].map((name, i) => {
-  const symbols = ["POLYCAB.NS", "KEI.NS", "HAVELLS.NS", "CGPOWER.NS", "SIEMENS.NS", "BEL.NS", "HAL.NS", "NTPC.NS", "LT.NS", "POWERGRID.NS"];
-  const themes = ["AI Infrastructure", "Power", "Electrical", "Power", "Capital Goods", "Defence", "Defence", "Power", "Infrastructure", "Power"];
-  const risk = 20 + (i % 5) * 4;
-  const conf = 88 - i * 2;
-  const upsideMin = 15 + (i % 3) * 5;
-  const upsideMax = upsideMin + 12;
-  const opp: Opportunity = {
-    id: `stock-${i}`,
-    name,
-    symbol: symbols[i],
-    type: "stock",
-    theme: themes[i],
-    sector: themes[i],
-    currentPrice: 1000 + i * 500,
-    currency: "INR",
-    confidenceScore: conf,
-    riskScore: risk,
-    potentialUpsideMin: upsideMin,
-    potentialUpsideMax: upsideMax,
-    timeHorizon: "1–3 years",
-    whyItMatters: `${name} benefits from India's infrastructure and industrial capex cycle.`,
-    whyNow: ["Government capex accelerating", "Order books expanding", "Valuations reasonable vs growth"],
-    whyCouldFail: ["Execution delays", "Margin pressure", "Competition intensifying"],
-    investmentThesis: `Structural beneficiary of ${themes[i]} theme with strong fundamentals.`,
-    bullCase: "Multi-year demand visibility with pricing power.",
-    bearCase: "Cyclical slowdown could compress multiples.",
-    disconfirmingEvidence: [],
-  };
-  return opportunityToRanked(opp, "stock");
-});
-
-const MOCK_FUNDS: RankedOpportunity[] = [
-  "Parag Parikh Flexi Cap", "Mirae Asset Large Cap", "Kotak Emerging Equity",
-  "Nippon India Small Cap", "HDFC Mid-Cap", "ICICI Pru Technology",
-  "SBI Gold ETF", "Axis Bluechip", "Motilal Oswal Nasdaq 100", "UTI Nifty 50 Index",
-].map((name, i) => {
-  const opp: Opportunity = {
-    id: `fund-${i}`,
-    name,
-    symbol: `MF${i}`,
-    type: "mutual_fund",
-    theme: ["Quality Growth", "Large Cap", "Mid Cap", "Small Cap", "Mid Cap", "Technology", "Gold", "Large Cap", "Global Tech", "Index"][i],
-    sector: "Mutual Fund",
-    currentPrice: 50 + i * 10,
-    currency: "INR",
-    confidenceScore: 85 - i,
-    riskScore: 15 + i * 2,
-    potentialUpsideMin: 10 + (i % 4) * 2,
-    potentialUpsideMax: 18 + (i % 4) * 3,
-    timeHorizon: "3–5 years",
-    whyItMatters: `${name} offers diversified exposure with proven track record.`,
-    whyNow: ["Market correction created entry", "Consistent performance", "Suitable for long-term goals"],
-    whyCouldFail: ["Market downturn", "Style underperformance", "Redemption pressure"],
-    investmentThesis: "Disciplined fund management with strong risk controls.",
-    bullCase: "Compounding through quality holdings.",
-    bearCase: "Underperformance in momentum markets.",
-    disconfirmingEvidence: [],
-  };
-  return opportunityToRanked(opp, "mutual_fund");
-});
-
 const MOCK_THEMES: RankedOpportunity[] = THEMES.map((theme, i) => {
   const opp: Opportunity = {
     id: `theme-${i}`,
@@ -233,7 +169,7 @@ function generateDailyMemo(news: NewsArticle[], topStocks: RankedOpportunity[]):
 
   return {
     date,
-    headline: "India Markets: Infrastructure & Defence Themes Lead Risk-Adjusted Opportunities",
+    headline: "India Markets: Diversified Picks Across Banking, IT, Pharma, Defence, FMCG & More",
     yesterdaySummary:
       "Markets showed selective strength with power, defence, and capital goods outperforming. FIIs remained cautious while DIIs provided support. Key focus: government capex pipeline and Q4 earnings.",
     topNews: topNews.length ? topNews : ["RBI holds rates steady", "Infrastructure spending announced", "Defence orders pipeline strong"],
@@ -257,16 +193,19 @@ export async function generateAnalytics(
   const sectorStrength = generateSectorStrength();
   const sorted = [...sectorStrength].sort((a, b) => b.return1M - a.return1M);
 
+  const stockPool = opportunities.length
+    ? getDailyStockPicks(opportunities)
+    : getDailyStockPicks();
+  const fundPool = opportunities.length
+    ? getDailyFundPicks(opportunities)
+    : getDailyFundPicks();
+
   const topStocks = sortByRiskAdjusted(
-    opportunities.length
-      ? opportunities.filter((o) => o.type === "stock").map((o) => opportunityToRanked(o, "stock"))
-      : MOCK_STOCKS
+    stockPool.map((o) => opportunityToRanked(o, "stock"))
   ).slice(0, 10);
 
   const topFunds = sortByRiskAdjusted(
-    opportunities.length
-      ? opportunities.filter((o) => o.type === "mutual_fund").map((o) => opportunityToRanked(o, "mutual_fund"))
-      : MOCK_FUNDS
+    fundPool.map((o) => opportunityToRanked(o, "mutual_fund"))
   ).slice(0, 10);
 
   const topThemes = sortByRiskAdjusted(MOCK_THEMES).slice(0, 10);
@@ -307,10 +246,10 @@ export async function generateAnalytics(
         { category: "Insider Transactions", netFlow: 320, trend: "inflow", changePercent: 6 },
       ],
       accumulated: [
-        { symbol: "HAL.NS", name: "HAL", netFlow: 520, type: "accumulated" },
+        { symbol: "ICICIBANK.NS", name: "ICICI Bank", netFlow: 520, type: "accumulated" },
         { symbol: "BEL.NS", name: "BEL", netFlow: 480, type: "accumulated" },
-        { symbol: "POLYCAB.NS", name: "Polycab", netFlow: 410, type: "accumulated" },
-        { symbol: "NTPC.NS", name: "NTPC", netFlow: 380, type: "accumulated" },
+        { symbol: "SUNPHARMA.NS", name: "Sun Pharma", netFlow: 410, type: "accumulated" },
+        { symbol: "MARUTI.NS", name: "Maruti", netFlow: 380, type: "accumulated" },
         { symbol: "LT.NS", name: "L&T", netFlow: 350, type: "accumulated" },
       ],
       sold: [

@@ -21,7 +21,10 @@ export function RankedOpportunityCard({ opp, rank }: { opp: RankedOpportunity; r
               <span className="text-xs font-bold text-emerald-400">#{rank}</span>
               <CardTitle className="text-sm">{opp.name}</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground">{opp.symbol} · {opp.theme}</p>
+            <p className="text-xs text-muted-foreground">{opp.symbol}</p>
+            <Badge variant="outline" className="w-fit mt-1 text-xs border-emerald-500/30 text-emerald-400">
+              {opp.sector}
+            </Badge>
           </div>
           <Badge
             variant={

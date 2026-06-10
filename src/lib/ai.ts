@@ -6,7 +6,8 @@ import type {
   Opportunity,
   StockResearch,
 } from "@/types";
-import { MOCK_OPPORTUNITIES, MOCK_NEWS } from "./mock-data";
+import { MOCK_NEWS } from "./mock-data";
+import { getDiversifiedOpportunities } from "./diversified-opportunities";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -58,7 +59,7 @@ export async function analyzeNewsArticle(
 export async function generateOpportunitiesFromNews(
   newsItems: { title: string; summary: string }[]
 ): Promise<Opportunity[] | null> {
-  if (!isAiEnabled()) return MOCK_OPPORTUNITIES;
+  if (!isAiEnabled()) return null;
 
   const result = await chatJson<{ opportunities: Opportunity[] }>(
     `You are an expert investment research analyst for Indian markets. Convert news into investment opportunities.
@@ -68,8 +69,9 @@ export async function generateOpportunitiesFromNews(
     potentialUpsideMin, potentialUpsideMax, timeHorizon, whyItMatters, whyNow (array),
     whyCouldFail (array), investmentThesis, bullCase, bearCase, disconfirmingEvidence (array),
     beneficiarySectors (array).
+    CRITICAL: Pick stocks from DIFFERENT sectors — max one per industry (Banking, IT, Pharma, Defence, Power, FMCG, Auto, Realty, Metals, etc).
     Focus on opportunities BEFORE they become widely recognized. Always include whyCouldFail.`,
-    `Generate 4-6 investment opportunities from these news items:\n${newsItems
+    `Generate 6-8 investment opportunities from DIFFERENT industries based on these news items:\n${newsItems
       .map((n) => `- ${n.title}: ${n.summary}`)
       .join("\n")}`
   );

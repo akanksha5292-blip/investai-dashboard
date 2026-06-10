@@ -1,7 +1,7 @@
 import { getMarketOverview } from "./market";
 import { fetchNews } from "./news";
 import { generateOpportunitiesFromNews } from "./ai";
-import { MOCK_OPPORTUNITIES } from "./mock-data";
+import { getDiversifiedOpportunities } from "./diversified-opportunities";
 import { generateAnalytics } from "./analytics/engine";
 import { clearCache, setCache } from "./cache";
 
@@ -18,8 +18,8 @@ export async function refreshAllData() {
     summary: a.summary ?? a.title,
   }));
 
-  const opportunities =
-    (await generateOpportunitiesFromNews(newsForOpps)) ?? MOCK_OPPORTUNITIES;
+  const aiOpportunities = await generateOpportunitiesFromNews(newsForOpps);
+  const opportunities = getDiversifiedOpportunities(aiOpportunities ?? []);
 
   const analytics = await generateAnalytics(news.articles, opportunities);
 
@@ -28,7 +28,7 @@ export async function refreshAllData() {
 
   const result = {
     marketOverview: market.data,
-    topOpportunities: opportunities.slice(0, 10),
+    topOpportunities: opportunities,
     newsArticles: news.articles,
     analytics,
     lastUpdated: new Date().toISOString(),

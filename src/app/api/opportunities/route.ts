@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchNews } from "@/lib/news";
 import { generateOpportunitiesFromNews } from "@/lib/ai";
-import { MOCK_OPPORTUNITIES } from "@/lib/mock-data";
+import { getDiversifiedOpportunities } from "@/lib/diversified-opportunities";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +13,8 @@ export async function GET() {
       summary: a.summary ?? a.title,
     }));
 
-    const opportunities =
-      (await generateOpportunitiesFromNews(newsForOpps)) ?? MOCK_OPPORTUNITIES;
+    const aiOpportunities = await generateOpportunitiesFromNews(newsForOpps);
+    const opportunities = getDiversifiedOpportunities(aiOpportunities ?? []);
 
     return NextResponse.json({
       opportunities,
@@ -24,7 +24,7 @@ export async function GET() {
   } catch (error) {
     console.error("Opportunities API error:", error);
     return NextResponse.json({
-      opportunities: MOCK_OPPORTUNITIES,
+      opportunities: getDiversifiedOpportunities(),
       source: "mock",
       lastUpdated: new Date().toISOString(),
     });

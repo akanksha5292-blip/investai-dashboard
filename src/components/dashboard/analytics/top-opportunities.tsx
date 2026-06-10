@@ -21,7 +21,7 @@ export function TopOpportunitiesSection({
         <h2 className="text-lg font-semibold">Top 10 Opportunities Today</h2>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Ranked by risk-adjusted return — best opportunities, not most speculative
+        10 picks daily from different industries — ranked by risk-adjusted return, not highest speculative upside
       </p>
       <Tabs defaultValue="stocks">
         <TabsList>
