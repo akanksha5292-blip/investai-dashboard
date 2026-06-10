@@ -9,6 +9,7 @@ import {
   Target,
   Baby,
   Star,
+  Rocket,
   TrendingUp,
   Menu,
   X,
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/opportunities", label: "Opportunities", icon: Target },
+  { href: "/ipos", label: "Upcoming IPOs", icon: Rocket },
   { href: "/news", label: "News Intelligence", icon: Newspaper },
   { href: "/research", label: "AI Research", icon: Search },
   { href: "/child-fund", label: "Child Future Fund", icon: Baby },
