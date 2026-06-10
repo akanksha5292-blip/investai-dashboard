@@ -7,6 +7,10 @@ export interface UpcomingIpo {
   companyName: string;
   sector: string;
   status: IpoStatus;
+  /** ISO date YYYY-MM-DD — used to auto-hide past IPOs */
+  openDate?: string;
+  closeDate?: string;
+  listingDate?: string;
   expectedOpenDate?: string;
   expectedCloseDate?: string;
   priceBandMin?: number;

@@ -10,15 +10,20 @@ import { Rocket, AlertCircle } from "lucide-react";
 
 export default function IposPage() {
   const [ipos, setIpos] = useState<UpcomingIpo[]>([]);
+  const [dataAsOf, setDataAsOf] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/ipos")
       .then((r) => r.json())
-      .then((data) => setIpos(data.ipos))
+      .then((data) => {
+        setIpos(data.ipos);
+        setDataAsOf(data.dataAsOf ?? null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  const openNow = ipos.filter((i) => i.status === "Open");
   const subscribe = ipos.filter((i) => i.verdict === "Subscribe");
   const avoid = ipos.filter((i) => i.verdict === "Avoid");
   const neutral = ipos.filter(
@@ -33,8 +38,14 @@ export default function IposPage() {
           <h1 className="text-2xl font-bold">Upcoming Indian IPOs</h1>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Honest opinions — upside, downside, risk, and whether each IPO is worth your money
+          Honest opinions — upside, downside, risk, and whether each IPO is worth your money.
+          Past IPOs are hidden automatically; pipeline names show even without confirmed dates.
         </p>
+        {dataAsOf && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Calendar curated as of {new Date(dataAsOf).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        )}
       </div>
 
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 flex gap-3">
@@ -50,10 +61,22 @@ export default function IposPage() {
 
       {!loading && (
         <div className="flex flex-wrap gap-2">
+          {openNow.length > 0 && (
+            <Badge variant="success">{openNow.length} Open now</Badge>
+          )}
           <Badge variant="success">{subscribe.length} Subscribe</Badge>
           <Badge variant="warning">{neutral.length} Neutral / Listing only</Badge>
           <Badge variant="danger">{avoid.length} Avoid</Badge>
-          <Badge variant="secondary">{ipos.length} Total tracked</Badge>
+          <Badge variant="secondary">{ipos.length} Active IPOs</Badge>
+        </div>
+      )}
+
+      {!loading && openNow.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-emerald-400">Open for subscription</h2>
+          {openNow.map((ipo) => (
+            <IpoCard key={ipo.id} ipo={ipo} />
+          ))}
         </div>
       )}
 
